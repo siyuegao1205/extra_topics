@@ -34,7 +34,8 @@ boroughs = nyc_airbnb %>% distinct(borough) %>% pull()
 selectInput(
   inputId = "borough_choice",
   label = h3("Borough Choice"),
-  choices = boroughs
+  choices = boroughs,
+  selected = "Manhattan"
 )
 
 sliderInput(
@@ -46,7 +47,7 @@ sliderInput(
 room_types = nyc_airbnb %>% distinct(room_type) %>% pull()
 
 radioButtons(
-  inputId = "room_choices",
+  inputId = "room_choice",
   label = h3("Room Type"),
   choices = room_types,
   selected = "Entire home/apt"
@@ -59,8 +60,16 @@ Column {data-width=650}
 ### Chart A
 
 ```{r}
-renderPrint({
-  input[["borough_choice"]]
+renderPlotly({
+  nyc_airbnb %>% 
+    filter(
+      borough == input[["borough_choice"]],
+      price >= input[["price_range"]][1],
+      price <= input[["price_range"]][2],
+      room_type == input[["room_choice"]]
+      ) %>% 
+    plot_ly(x = ~lat, y = ~long, color = ~price,
+            type = "scatter", mode = "markers", alpha = .5)
 })
 ```
 
@@ -70,8 +79,14 @@ Column {data-width=350}
 ### Chart B
 
 ```{r}
-renderPrint({
-  input[["price_range"]]
+renderPlotly({
+  nyc_airbnb %>% 
+    filter(
+      borough == input[["borough_choice"]],
+      room_type == input[["room_choice"]]) %>% 
+    count(neighbourhood) %>% 
+    mutate(neighbourhood = fct_reorder(neighbourhood, n)) %>% 
+    plot_ly(x = ~neighbourhood, y = ~n, color = ~neighbourhood, type = "bar")
 })
 ```
 
@@ -79,7 +94,7 @@ renderPrint({
 
 ```{r}
 renderPrint({
-  input[["room_choices"]]
+  input[["room_choice"]]
 })
 ```
 
